@@ -19,7 +19,7 @@ if ( ! $user->has_course_status( $course_id, [ LP_COURSE_ENROLLED, LP_COURSE_FIN
 		<form>
 			<h4>
 				<?php _e( 'Write a review', 'learnpress-course-review' ); ?>
-				<a href="" class="close"><i class="fas fa-times"></i></a>
+				<a href="" class="close"><i class="lp-icon-close"></i></a>
 			</h4>
 			<ul class="review-fields">
 				<?php do_action( 'learn_press_before_review_fields' ); ?>
@@ -37,7 +37,7 @@ if ( ! $user->has_course_status( $course_id, [ LP_COURSE_ENROLLED, LP_COURSE_FIN
 						<?php for ( $i = 1; $i <= 5; $i ++ ) { ?>
 							<li class="review-title" title="<?php echo $i; ?>">
 								<span>
-									<?php echo LP_Addon_Course_Review::get_svg_star() ?>
+									<?php echo LP_Addon_Course_Review::get_svg_star(); ?>
 								</span>
 							</li>
 						<?php } ?>
@@ -52,7 +52,6 @@ if ( ! $user->has_course_status( $course_id, [ LP_COURSE_ENROLLED, LP_COURSE_FIN
 					<button type="button" class="lp-button close">
 						<?php _e( 'Cancel', 'learnpress-course-review' ); ?>
 					</button>
-					<span class="ajaxload"></span>
 					<span class="error"></span>
 					<?php wp_nonce_field( 'learn_press_course_review_' . get_the_ID(), 'review-nonce' ); ?>
 					<input type="hidden" name="rating" value="0">

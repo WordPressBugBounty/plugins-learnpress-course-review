@@ -1,6 +1,7 @@
 <?php
 
 use LearnPress\Models\CourseModel;
+use LearnPress\Models\UserModel;
 
 if ( ! class_exists( 'LP_REST_Courses_Reviews_Controller' ) ) {
 	class LP_REST_Courses_Reviews_Controller extends LP_Abstract_REST_Controller {
@@ -75,29 +76,6 @@ if ( ! class_exists( 'LP_REST_Courses_Reviews_Controller' ) ) {
 			parent::register_routes();
 		}
 
-		protected function check_can_review( $course_id ) {
-			$user_id = get_current_user_id();
-			$user    = learn_press_get_user( $user_id );
-
-			$can_review = false;
-
-			if ( $user->has_course_status( $course_id, array( 'enrolled', 'completed', 'finished' ) ) && ! $this->user_get_comment( $course_id ) ) {
-				$can_review = true;
-			}
-
-			return $can_review;
-		}
-
-		protected function user_get_comment( $course_id ) {
-			static $comments;
-
-			if ( ! isset( $comments ) ) {
-				$comments = learn_press_get_user_rate( $course_id, get_current_user_id(), true );
-			}
-
-			return $comments;
-		}
-
 		public function get_item_review( $request ) {
 			$course_id     = $request->get_param( 'id' );
 			$paged         = ! empty( $request->get_param( 'page' ) ) ? absint( $request->get_param( 'page' ) ) : 1;
@@ -117,7 +95,10 @@ if ( ! class_exists( 'LP_REST_Courses_Reviews_Controller' ) ) {
 					throw new Exception( esc_html__( 'Course not found.', 'learnpress-course-review' ) );
 				}
 
-				$user = learn_press_get_current_user();
+				$user = UserModel::find( get_current_user_id(), true );
+				if ( ! $user ) {
+					throw new Exception( esc_html__( 'User not found.', 'learnpress-course-review' ) );
+				}
 
 				$course_rate = learn_press_get_course_rate( $course_id, false );
 
@@ -135,7 +116,7 @@ if ( ! class_exists( 'LP_REST_Courses_Reviews_Controller' ) ) {
 				//template show more
 				$paged                      = ! empty( $course_review['paged'] ) ? absint( $course_review['paged'] ) : 1;
 				$pages                      = ! empty( $course_review['pages'] ) ? absint( $course_review['pages'] ) : 1;
-				$can_review                 = $this->check_can_review( $course_id );
+				$can_review = LP_Addon_Course_Review_Preload::$addon->check_user_can_review_course( $user, $course );
 				$response->data->can_review = $can_review;
 
 				//template show more
@@ -155,11 +136,14 @@ if ( ! class_exists( 'LP_REST_Courses_Reviews_Controller' ) ) {
 				}
 
 				if ( ! $can_review ) {
-					$review = $this->user_get_comment( $course_id );
-
+					$review = learn_press_get_user_rate( $course_id, $user->get_id() );
 					if ( $review && ! $review->comment_approved ) {
 						$response->data->comment_approved = 0;
-						$response->message                = esc_html__( 'You have already reviewed this course. It will be visible after it has been approved', 'learnpress-course-review' );
+
+						$response->message = __(
+							'You have already reviewed this course. It will be visible after it has been approved',
+							'learnpress-course-review'
+						);
 					}
 				}
 
@@ -197,7 +181,18 @@ if ( ! class_exists( 'LP_REST_Courses_Reviews_Controller' ) ) {
 					throw new Exception( esc_html__( 'No User.', 'learnpress-course-review' ) );
 				}
 
-				if ( ! $this->check_can_review( $course_id ) ) {
+				$course = CourseModel::find( $course_id, true );
+				if ( ! $course ) {
+					throw new Exception( esc_html__( 'Course not found.', 'learnpress-course-review' ) );
+				}
+
+				$user = UserModel::find( $user_id, true );
+				if ( ! $user ) {
+					throw new Exception( esc_html__( 'User not found.', 'learnpress-course-review' ) );
+				}
+
+				$can_review = LP_Addon_Course_Review_Preload::$addon->check_user_can_review_course( $user, $course );
+				if ( ! $can_review ) {
 					throw new Exception( esc_html__( 'You can not submit review.', 'learnpress-course-review' ) );
 				}
 
@@ -212,14 +207,14 @@ if ( ! class_exists( 'LP_REST_Courses_Reviews_Controller' ) ) {
 					)
 				);
 
-				if ( $add_review ) {
+				if ( ! $add_review instanceof WP_Error ) {
 					$response->data->comment_id = $add_review;
 					$response->message          = is_admin() ? esc_html__( 'Your review submitted successfully', 'learnpress-course-review' ) : esc_html__( 'Thank you for your review. Your review will be visible after it has been approved', 'learnpress-course-review' );
 					$response->status           = 'success';
 				} else {
-					throw new Exception( esc_html__( 'Cannot submit your review.', 'learnpress-course-review' ) );
+					throw new Exception( $add_review->get_error_message() );
 				}
-			} catch ( \Throwable $th ) {
+			} catch ( Throwable $th ) {
 				$response->message = $th->getMessage();
 			}
 
@@ -255,7 +250,7 @@ if ( ! class_exists( 'LP_REST_Courses_Reviews_Controller' ) ) {
 				ob_start();
 				$data_for_template = apply_filters( 'lp/shortcode/course-review/data', $data_for_template );
 				LP_Addon_Course_Review_Preload::$addon->get_template(
-					apply_filters( 'lp/course-review/rating-comments/template', 'list-rating-reviews.php' ),
+					'list-rating-reviews.php',
 					[ 'data' => $data_for_template ]
 				);
 

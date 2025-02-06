@@ -16,8 +16,6 @@ if ( empty( $data ) ) {
 
 <div class="lp-rating-reviews">
 	<?php
-	do_action( 'learn-press/course-review/before-rating-reviews', $data );
 	do_action( 'learn-press/course-review/list-rating-reviews', $data );
-	do_action( 'learn-press/course-review/before-rating-reviews', $data );
 	?>
 </div>

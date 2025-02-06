@@ -14,6 +14,7 @@ if ( ! isset( $course_id ) ) {
 $args           = array(
 	'user_id' => learn_press_get_current_user_id(),
 	'post_id' => $course_id,
+	'type'    => 'review',
 );
 $comments_count = get_comments( $args );
 

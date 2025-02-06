@@ -10,6 +10,8 @@
 // Prevent loading this file directly
 use LearnPress\Helpers\Template;
 use LearnPress\Models\CourseModel;
+use LearnPress\Models\UserItems\UserCourseModel;
+use LearnPress\Models\UserModel;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -39,6 +41,22 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 		private static $comment_type = 'review';
 
 		const META_KEY_RATING_AVERAGE = 'lp_course_rating_average';
+		const META_KEY_ENABLE         = '_lp_course_review_enable';
+
+		public static $instance = null;
+
+		/**
+		 * Get instance class.
+		 *
+		 * @return LP_Addon_Course_Review|null
+		 */
+		public static function instance() {
+			if ( is_null( self::$instance ) ) {
+				self::$instance = new self();
+			}
+
+			return self::$instance;
+		}
 
 		/**
 		 * LP_Addon_Course_Review constructor.
@@ -46,6 +64,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 		public function __construct() {
 			parent::__construct();
 			add_action( 'widgets_init', array( $this, 'load_widget' ) );
+			$this->hooks();
 		}
 
 		/**
@@ -57,7 +76,6 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 			define( 'LP_ADDON_COURSE_REVIEW_PATH', dirname( LP_ADDON_COURSE_REVIEW_FILE ) );
 			define( 'LP_ADDON_COURSE_REVIEW_PER_PAGE', apply_filters( 'learn-press/course-review/per-page', 5 ) );
 			define( 'LP_ADDON_COURSE_REVIEW_TMPL', LP_ADDON_COURSE_REVIEW_PATH . '/templates/' );
-			//define( 'LP_ADDON_COURSE_REVIEW_THEME_TMPL', learn_press_template_path() . '/addons/course-review/' );
 			define( 'LP_ADDON_COURSE_REVIEW_URL', untrailingslashit( plugins_url( '/', __DIR__ ) ) );
 		}
 
@@ -77,15 +95,18 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 			require_once LP_ADDON_COURSE_REVIEW_PATH . '/inc/rest-api/class-rest-api.php';
 			// Template hooks
 			require_once LP_ADDON_COURSE_REVIEW_PATH . '/inc/template-hooks/list-rating-reviews.php';
-			require_once LP_ADDON_COURSE_REVIEW_PATH . '/inc/template-hooks/filter-course-rating.php';
-			FilterCourseRatingTemplate::instance();
+			require_once LP_ADDON_COURSE_REVIEW_PATH . '/inc/template-hooks/FilterCourseRatingTemplate.php';
 			require_once LP_ADDON_COURSE_REVIEW_PATH . '/inc/background/class-lp-course-review-background.php';
 		}
 
 		/**
 		 * Init hooks.
 		 */
-		protected function _init_hooks() {
+		protected function hooks() {
+			// Enqueue assets.
+			add_action( 'wp_enqueue_scripts', array( $this, 'review_assets' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_assets' ) );
+
 			//api v2
 			add_filter(
 				'learn-press/core-api/controllers',
@@ -97,13 +118,8 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 			);
 
 			add_filter( 'learn-press/course-tabs', array( $this, 'add_course_tab_reviews' ), 5 );
-
-			add_action( 'wp_enqueue_scripts', array( $this, 'review_assets' ) );
-
-			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_assets' ) );
-			//LP_Request::register_ajax( 'add_review', array( $this, 'add_review' ) );
 			add_shortcode( 'learn_press_review', array( $this, 'shortcode_review' ) );
-			// Clear cache when update comment. (Approve|Unapprove|Edit|Spam|Trash)
+			// Clear cache when update comment. (Approve|Un-approve|Edit|Spam|Trash)
 			add_action(
 				'wp_set_comment_status',
 				function ( $comment_id ) {
@@ -113,18 +129,39 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 					}
 
 					$post_id = $comment->comment_post_ID;
+					$user_id = $comment->user_id;
 					if ( LP_COURSE_CPT !== get_post_type( $post_id ) ) {
 						return;
 					}
 
 					$lp_course_reviews_cache = new LP_Course_Review_Cache( true );
-					$lp_course_reviews_cache->clean_rating( $post_id );
+					$lp_course_reviews_cache->clean_rating( $post_id, $user_id );
 				}
 			);
-			add_filter( 'learnPress/prepare_struct_courses_response/courseObjPrepare', [
-				$this,
-				'rest_api_courses'
-			], 10, 2 );
+			add_filter(
+				'learnPress/prepare_struct_courses_response/courseObjPrepare',
+				[
+					$this,
+					'rest_api_courses',
+				],
+				10,
+				2
+			);
+			// Add setting field to course.
+			add_filter(
+				'lp/course/meta-box/fields/general',
+				function ( $fields, $post_id ) {
+					$fields[ self::META_KEY_ENABLE ] = new LP_Meta_Box_Checkbox_Field(
+						esc_html__( 'Enable reviews', 'learnpress-course-review' ),
+						esc_html__( 'Show reviews for this course' ),
+						'yes'
+					);
+
+					return $fields;
+				},
+				10,
+				2
+			);
 
 			$this->init_comment_table();
 			$this->calculate_rating_average_courses();
@@ -173,26 +210,12 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 				LP_Addon_Course_Review_Preload::$addon->get_plugin_url( "assets/js/course-review-v2{$min}.js" ),
 				[],
 				$v,
-				[
-					'strategy' => 'defer',
-				]
+				[ 'strategy' => 'defer' ]
 			);
 
 			if ( LP_PAGE_SINGLE_COURSE === LP_Page_Controller::page_current() ) {
 				wp_enqueue_script( 'course-review' );
-				//wp_enqueue_style( 'course-review' );
-
-				wp_localize_script(
-					'course-review',
-					'learn_press_course_review',
-					array(
-						'localize' => array(
-							'empty_title'   => __( 'Please enter the review title', 'learnpress-course-review' ),
-							'empty_content' => __( 'Please enter the review content', 'learnpress-course-review' ),
-							'empty_rating'  => __( 'Please select your rating', 'learnpress-course-review' ),
-						),
-					)
-				);
+				wp_enqueue_style( 'course-review' );
 			}
 		}
 
@@ -204,68 +227,26 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 		 * @version 1.0.0
 		 */
 		public function check_load_file_style() {
-			if ( wp_style_is( 'course-review', 'registered' ) ) {
-				wp_enqueue_style( 'course-review' );
-			} else {
-				$is_rtl = is_rtl() ? '-rtl' : '';
-				$min    = '.min';
-				if ( LP_Debug::is_debug() ) {
-					$min = '';
-				}
-
-				$file_style = LP_Addon_Course_Review_Preload::$addon->get_plugin_url( "assets/css/course-review{$is_rtl}{$min}.css" );
-				wp_register_style( 'course-review', $file_style, [], LP_ADDON_COURSE_REVIEW_VER );
-				?>
-				<style id="lp-course-review-star-style">
-					<?php echo wp_remote_fopen( $file_style ); ?>
-				</style>
-				<?php
+			// Check if has action, this action add to LearnPress on v4.2.7.2
+			if ( has_action( 'learn-press/widget/before' ) ) {
+				return;
 			}
+
+			$is_rtl = is_rtl() ? '-rtl' : '';
+			$min    = '.min';
+			if ( LP_Debug::is_debug() ) {
+				$min = '';
+			}
+			$file_style = LP_Addon_Course_Review_Preload::$addon->get_plugin_url( "assets/css/course-review{$is_rtl}{$min}.css" );
+			?>
+			<style id="lp-course-review-star-style">
+				<?php echo wp_remote_fopen( $file_style ); ?>
+			</style>
+			<?php
 		}
 
 		public function exclude_rating( $query ) {
 			$query->query_vars['type__not_in'] = 'review';
-		}
-
-		/**
-		 * @deprecated 4.1.2
-		 */
-		public function add_review() {
-			_deprecated_function( __METHOD__, '4.1.2' );
-			$response = array( 'result' => 'success' );
-			$nonce    = ! empty( $_REQUEST['review_nonce'] ) ? $_REQUEST['review_nonce'] : '';
-			$id       = ! empty( $_REQUEST['comment_post_ID'] ) ? absint( $_REQUEST['comment_post_ID'] ) : 0;
-			$rate     = ! empty( $_REQUEST['rating'] ) ? $_REQUEST['rating'] : '0';
-			$title    = ! empty( $_REQUEST['review_title'] ) ? $_REQUEST['review_title'] : '';
-			$content  = ! empty( $_REQUEST['review_content'] ) ? $_REQUEST['review_content'] : '';
-
-			if ( wp_verify_nonce( $nonce, 'learn_press_course_review_' . $id ) ) {
-				$response['result']  = 'fail';
-				$response['message'] = __( 'Error', 'learnpress-course-review' );
-			}
-
-			if ( get_post_type( $id ) != 'lp_course' ) {
-				$response['result']  = 'fail';
-				$response['message'] = __( 'Invalid course', 'learnpress-course-review' );
-			}
-
-			$return = learn_press_add_course_review(
-				array(
-					'user_id'   => get_current_user_id(),
-					'course_id' => $id,
-					'rate'      => $rate,
-					'title'     => $title,
-					'content'   => $content,
-				)
-			);
-
-			// Clear cache
-			//wp_cache_delete( 'course-' . $id, 'lp-course-ratings' );
-			$lp_course_review_cache = new LP_Course_Review_Cache( true );
-			$lp_course_review_cache->clean_rating( $id );
-
-			$response['comment'] = $return;
-			learn_press_send_json( $response );
 		}
 
 		public function init_comment_table() {
@@ -313,7 +294,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 		public function add_comment_post_type_filter() {
 			?>
 			<label class="screen-reader-text"
-				   for="filter-by-comment-post-type"><?php _e( 'Filter by post type' ); ?></label>
+					for="filter-by-comment-post-type"><?php _e( 'Filter by post type' ); ?></label>
 			<select id="filter-by-comment-post-type" name="post_type">
 				<?php
 				$comment_post_types = apply_filters(
@@ -341,10 +322,6 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 		 * @return false|string|void
 		 */
 		public function shortcode_review( array $setting = [] ) {
-			wp_enqueue_style( 'learnpress' );
-			wp_enqueue_style( 'course-review' );
-			wp_enqueue_script( 'course-review' );
-
 			$setting = shortcode_atts(
 				array(
 					'course_id'      => 0,
@@ -369,6 +346,14 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 				return ob_get_clean();
 			}
 
+			if ( ! $this->is_enable( $course ) ) {
+				return '';
+			}
+
+			wp_enqueue_style( 'learnpress' );
+			wp_enqueue_style( 'course-review' );
+			wp_enqueue_script( 'course-review' );
+
 			$user              = learn_press_get_current_user();
 			$data_for_template = compact( 'course_id', 'user', 'setting' );
 			if ( 'yes' === $setting['show_rate'] ) {
@@ -383,7 +368,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 			$data_for_template = apply_filters( 'lp/shortcode/course-review/data', $data_for_template );
 			ob_start();
 			LP_Addon_Course_Review_Preload::$addon->get_template(
-				apply_filters( 'lp/shortcode/course-review/rating-comments/template', 'list-rating-reviews.php' ),
+				'list-rating-reviews.php',
 				[ 'data' => $data_for_template ]
 			);
 
@@ -396,6 +381,15 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 
 
 		public function add_course_tab_reviews( $tabs ) {
+			$course = CourseModel::find( get_the_ID(), true );
+			if ( ! $course ) {
+				return $tabs;
+			}
+
+			if ( ! $this->is_enable( $course ) ) {
+				return $tabs;
+			}
+
 			$tabs['reviews'] = array(
 				'title'    => __( 'Reviews', 'learnpress-course-review' ),
 				'priority' => 60,
@@ -489,7 +483,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 
 				$rating['total'] = (int) $rating_rs->total;
 				$total_rating    = 0;
-				for ( $star = 1; $star <= 5; $star ++ ) {
+				for ( $star = 1; $star <= 5; $star++ ) {
 					$key = '';
 					switch ( $star ) {
 						case 1:
@@ -515,7 +509,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 					$rating['items'][ $star ]['percent'] = (int) ( $rating_rs->total ? $rating_rs->{$key} * 100 / $rating_rs->total : 0 );
 
 					// Sum rating.
-					$count_star   = $rating_rs->{$key};
+					$count_star    = $rating_rs->{$key};
 					$total_rating += $count_star * $star;
 				}
 
@@ -592,6 +586,57 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 			$courseObjPrepare->rating = learn_press_get_course_rate( $course->get_id() );
 
 			return $courseObjPrepare;
+		}
+
+		/**
+		 * Check course review is enable.
+		 *
+		 * @param CourseModel $course
+		 *
+		 * @return bool
+		 * @since 4.1.5
+		 * @version 1.0.0
+		 */
+		public function is_enable( CourseModel $course ): bool {
+			$enable = $course->get_meta_value_by_key( self::META_KEY_ENABLE, 'yes' );
+
+			return 'yes' === $enable;
+		}
+
+		/**
+		 * Get average rating of course.
+		 *
+		 * @param CourseModel $course
+		 *
+		 * @return float
+		 */
+		public function get_average_rated( CourseModel $course ): float {
+			$course_average_review = (float) $course->get_meta_value_by_key( LP_Addon_Course_Review::META_KEY_RATING_AVERAGE, 0 );
+
+			return $course_average_review;
+		}
+
+		/**
+		 * Check user can review course.
+		 *
+		 * @param UserModel $user
+		 * @param CourseModel $course
+		 *
+		 * @return bool
+		 * @since 4.1.5
+		 * @version 1.0.0
+		 */
+		public function check_user_can_review_course( UserModel $user, CourseModel $course ): bool {
+			$can_review = false;
+
+			$userCourse = UserCourseModel::find( $user->get_id(), $course->get_id() );
+			if ( $userCourse &&
+				( $userCourse->has_enrolled_or_finished() || ( $course->is_offline() && $userCourse->has_purchased() ) )
+				&& ! learn_press_get_user_rate( $course->get_id(), $user->get_id() ) ) {
+				$can_review = true;
+			}
+
+			return $can_review;
 		}
 	}
 }

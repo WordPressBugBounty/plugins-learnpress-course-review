@@ -82,14 +82,9 @@ function learn_press_get_course_review( $course_id, $paged = 1, $per_page = LP_A
 }
 
 function _learn_press_get_ratings( $course_id ) {
-	//  $ratings = [
-	//      $course_id => leanr_press_get_ratings_result( $course_id )
-	//  ];
 	$ratings = [
 		$course_id => LP_Addon_Course_Review_Preload::$addon->get_rating_of_course( $course_id ),
 	];
-
-	//error_log( print_r( $ratings, true ) );
 
 	return $ratings;
 }
@@ -142,10 +137,11 @@ function learn_press_get_user_review_title( $course_id, $user_id ) {
  *
  * @param int $course_id
  * @param int $user_id
+ * @param bool $force
  *
  * @return mixed
  */
-function learn_press_get_user_rate( $course_id = null, $user_id = null, $force = false ) {
+function learn_press_get_user_rate( int $course_id = 0, int $user_id = 0, $force = false ) {
 	if ( ! $user_id ) {
 		$user_id = get_current_user_id();
 	}
@@ -153,31 +149,25 @@ function learn_press_get_user_rate( $course_id = null, $user_id = null, $force =
 		$course_id = get_the_ID();
 	}
 
-	// Get in cache if it is already get
-	if ( ! ( $comment = wp_cache_get( 'user-' . $user_id . '/' . $course_id, 'lp-user-rate' ) ) || $force ) {
-		global $wpdb;
-		$query = $wpdb->prepare(
-			"
-	        SELECT *
-	        FROM {$wpdb->posts} p
-	        INNER JOIN {$wpdb->comments} c ON c.comment_post_ID = p.ID
-	        WHERE c.comment_post_ID = %d
-	        AND c.user_id = %d
-	        AND c.comment_type = %s
-	    	",
-			$course_id,
-			$user_id,
-			'review'
-		);
+	global $wpdb;
+	$query = $wpdb->prepare(
+		"
+		SELECT *
+		FROM {$wpdb->posts} p
+		INNER JOIN {$wpdb->comments} c ON c.comment_post_ID = p.ID
+		WHERE c.comment_post_ID = %d
+		AND c.user_id = %d
+		AND c.comment_type = %s
+		",
+		$course_id,
+		$user_id,
+		'review'
+	);
 
-		$comment = $wpdb->get_row( $query );
-
-		if ( $comment ) {
-			$comment->comment_title = get_comment_meta( $comment->comment_ID, '_lpr_review_title', true );
-			$comment->rating        = get_comment_meta( $comment->comment_ID, '_lpr_rating', true );
-		}
-
-		wp_cache_set( 'user-' . $user_id . '/' . $course_id, $comment, 'lp-user-rate' );
+	$comment = $wpdb->get_row( $query );
+	if ( $comment ) {
+		$comment->comment_title = get_comment_meta( $comment->comment_ID, '_lpr_review_title', true );
+		$comment->rating        = get_comment_meta( $comment->comment_ID, '_lpr_rating', true );
 	}
 
 	return $comment;
@@ -220,17 +210,18 @@ function learn_press_add_course_review( $args = array() ) {
 				'user_id'              => $user->ID,
 				'comment_approved'     => 1,
 				'comment_type'         => 'review', // let filter to not display it as comments
-			)
+			),
+			true
 		);
 	}
-	if ( $comment_id ) {
+	if ( ! $comment_id instanceof WP_Error ) {
 		add_comment_meta( $comment_id, '_lpr_rating', $args['rate'] );
 		add_comment_meta( $comment_id, '_lpr_review_title', $args['title'] );
-	}
 
-	// Clear cache
-	$lp_course_review_cache = new LP_Course_Review_Cache( true );
-	$lp_course_review_cache->clean_rating( $course_id );
+		// Clear cache
+		$lp_course_review_cache = new LP_Course_Review_Cache( true );
+		$lp_course_review_cache->clean_rating( $course_id, $user_id );
+	}
 
 	return $comment_id;
 }

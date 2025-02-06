@@ -19,11 +19,12 @@ class LPCourseReviewBackGround extends LP_Async_Request {
 
 	protected function handle() {
 		try {
-			@set_time_limit( 0 );
+			ini_set( 'max_execution_time', 0 );
 			$handle_name = LP_Request::get_param( 'handle_name' );
 			if ( $handle_name == 'calculate_rating_average_courses' ) {
 				$this->calculate_rating_average_courses();
 			}
+			ini_set( 'max_execution_time', LearnPress::$time_limit_default_of_sever );
 			die;
 		} catch ( Throwable $e ) {
 			error_log( $e->getMessage() );

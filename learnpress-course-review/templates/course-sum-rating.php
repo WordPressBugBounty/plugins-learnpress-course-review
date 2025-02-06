@@ -6,7 +6,7 @@
  *
  * @author  ThimPress
  * @package LearnPress/Course-Review/Templates
- * version  3.0.3
+ * version  3.0.4
  */
 
 // Prevent loading this file directly
@@ -21,7 +21,7 @@ $total = $course_rate_res['total'] ?? 0;
 ?>
 <div class="course-rate">
 	<div class="course-rate__summary">
-		<div class="course-rate__summary-value"><?php echo esc_html( $rated ); ?></div>
+		<div class="course-rate__summary-value"><?php echo esc_html( number_format( $course_rate_res['rated'] ?? 0, 1 ) ); ?></div>
 		<div class="course-rate__summary-stars">
 			<?php
 			LP_Addon_Course_Review_Preload::$addon->get_template( 'rating-stars.php', [ 'rated' => $rated ] );

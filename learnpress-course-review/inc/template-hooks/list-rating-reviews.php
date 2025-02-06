@@ -2,12 +2,12 @@
 
 namespace LP_Addon_Course_Review;
 
-use Academy\API\Course;
 use LearnPress\Helpers\Template;
 use LearnPress\Models\CourseModel;
 use LP_Addon_Course_Review;
 use LP_Addon_Course_Review_Preload;
 use Throwable;
+use LearnPress\Models\UserModel;
 
 /**
  * Class Template
@@ -18,6 +18,7 @@ use Throwable;
  */
 class LP_Addon_Review_List_Rating_Reviews_Template {
 	public $template;
+	public $addon;
 
 	public static function instance() {
 		static $instance = null;
@@ -30,13 +31,19 @@ class LP_Addon_Review_List_Rating_Reviews_Template {
 	}
 
 	protected function __construct() {
+		$this->addon = LP_Addon_Course_Review_Preload::$addon;
 		add_action( 'learn-press/course-review/list-rating-reviews', array( $this, 'list_rating_reviews' ) );
-		add_filter( 'learn-press/single-course/offline/section-left', [
-			$this,
-			'single_course_offline_list_rating_reviews'
-		] );
 		add_filter(
-			'lean-press/single-course/offline/info-bar',
+			'learn-press/single-course/offline/section-left',
+			[
+				$this,
+				'single_course_offline_list_rating_reviews',
+			],
+			10,
+			3
+		);
+		add_filter(
+			'learn-press/single-course/offline/info-bar',
 			[ $this, 'single_course_offline_info_bar' ],
 			10,
 			2
@@ -71,15 +78,21 @@ class LP_Addon_Review_List_Rating_Reviews_Template {
 	 * Add section show list rating on single course offline
 	 *
 	 * @param array $sections
+	 * @param CourseModel $course
+	 * @param UserModel|false $user
 	 *
 	 * @return array
 	 * @since 4.1.4
 	 * @version 1.0.0
 	 */
-	public function single_course_offline_list_rating_reviews( array $sections = [] ): array {
+	public function single_course_offline_list_rating_reviews( array $sections, CourseModel $course, $user ): array {
 		$sections_new = [];
 
 		try {
+			if ( ! $this->addon->is_enable( $course ) ) {
+				return $sections;
+			}
+
 			ob_start();
 			LP_Addon_Course_Review_Preload::$addon->add_course_tab_reviews_callback();
 			$html_rating_reviews_main = ob_get_clean();
@@ -119,6 +132,10 @@ class LP_Addon_Review_List_Rating_Reviews_Template {
 		$sections_new = [];
 
 		try {
+			if ( ! $this->addon->is_enable( $course ) ) {
+				return $sections;
+			}
+
 			foreach ( $sections as $k => $section ) {
 				$sections_new[ $k ] = $section;
 				if ( $k === 'author' ) {
@@ -155,7 +172,7 @@ class LP_Addon_Review_List_Rating_Reviews_Template {
 				'<em class="fas lp-review-svg-star">%s</em>',
 				LP_Addon_Course_Review::get_svg_star()
 			);
-			$html = sprintf(
+			$html      = sprintf(
 				'<div class="item-meta">
 					<div class="star-info">
 					<span class="ico-star">%s</span><span class="info-rating">%d/%d</span> %s
@@ -173,5 +190,3 @@ class LP_Addon_Review_List_Rating_Reviews_Template {
 		return $html;
 	}
 }
-
-LP_Addon_Review_List_Rating_Reviews_Template::instance();

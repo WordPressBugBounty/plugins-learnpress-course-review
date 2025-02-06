@@ -5,7 +5,7 @@
  *
  * @author tungnx
  * @since 4.2.2
- * @version 1.0.0
+ * @version 1.0.1
  */
 defined( 'ABSPATH' ) || exit();
 
@@ -58,11 +58,12 @@ class LP_Course_Review_Cache extends LP_Cache {
 	 * Clean cache rating
 	 * And calculate average rating for course
 	 *
-	 * @param $course_id
+	 * @param int $course_id
+	 * @param int $user_id
 	 *
 	 * @return void
 	 */
-	public function clean_rating( $course_id ) {
+	public function clean_rating( int $course_id, int $user_id = 0 ) {
 		$this->clear( $course_id );
 		$key_cache_first = "{$this->key_group}/{$course_id}";
 		LP_Cache::cache_load_first( 'clean', $key_cache_first );
@@ -70,5 +71,7 @@ class LP_Course_Review_Cache extends LP_Cache {
 		// Set average rating for course
 		$rating = LP_Addon_Course_Review_Preload::$addon->get_rating_of_course( $course_id );
 		LP_Addon_Course_Review::set_course_rating_average( $course_id, $rating['rated'] );
+		$key_cache_review = "user/{$user_id}/course/{$course_id}/review";
+		$this->clear( $key_cache_review );
 	}
 }
