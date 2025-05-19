@@ -2,10 +2,8 @@
 Contributors: thimpress
 Donate link:
 Tags: lms, education, e-learning, learning management system, review.
-Requires at least: 6.0
-Requires PHP: 7.4
-Tested up to: 6.7
-Stable tag: 4.1.5
+Tested up to: 6.8
+Stable tag: 4.1.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -56,6 +54,15 @@ Check out <a href="http://docs.thimpress.com/learnpress" target="_blank">LearnPr
 1. LearnPress Course Review screenshot.
 
 == Changelog ==
+
+= 4.1.6 (2025-05-19) =
+~ Refactor code render template.
+~ Optimize code JS.
+~ Added: Toast notification when user rated.
+~ Added: menu Course Review on LearnPress menu, link to comment type 'review'.
+~ Exclude course review from WP default comment list.
+~ Show on Gutenberg theme.
+~ Show review on list course.
 
 = 4.1.5 (2025-02-06) =
 ~ Added: option enable/disable review for course.

@@ -4,21 +4,23 @@
  * Plugin URI: http://thimpress.com/learnpress
  * Description: Adding review for course.
  * Author: ThimPress
- * Version: 4.1.5
+ * Version: 4.1.6
  * Author URI: http://thimpress.com
  * Tags: learnpress
  * Requires at least: 6.0
- * Tested up to: 6.7
+ * Requires PHP: 7.4
  * Text Domain: learnpress-course-review
  * Domain Path: /languages/
- * Require_LP_Version: 4.2.7-beta.0
+ * Require_LP_Version: 4.2.8
  * Requires Plugins: learnpress
  *
  * @package learnpress-course-review
  */
 
-use LP_Addon_Course_Review\FilterCourseRatingTemplate;
-use LP_Addon_Course_Review\LP_Addon_Review_List_Rating_Reviews_Template;
+use LearnPress\CourseReview\CourseReviewShortCode;
+use LearnPress\CourseReview\TemplateHooks\CourseRatingTemplate;
+use LearnPress\CourseReview\TemplateHooks\FilterCourseRatingTemplate;
+use LearnPress\CourseReview\TemplateHooks\TemplateHooks;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -93,10 +95,14 @@ class LP_Addon_Course_Review_Preload {
 	 * Load addon
 	 */
 	public function load() {
+		include_once 'vendor/autoload.php';
 		include_once 'inc/load.php';
 		self::$addon = LP_Addon_Course_Review::instance();
-		LP_Addon_Review_List_Rating_Reviews_Template::instance();
+		//LP_Addon_Review_List_Rating_Reviews_Template::instance();
 		FilterCourseRatingTemplate::instance();
+		CourseRatingTemplate::instance();
+		TemplateHooks::instance();
+		CourseReviewShortCode::instance();
 	}
 
 	public function show_note_errors_require_lp() {
