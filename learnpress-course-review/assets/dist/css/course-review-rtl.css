@@ -302,16 +302,6 @@
   width: 100%;
   height: auto;
 }
-.learnpress-course-review .course-reviews-list li .review-text, .learnpress-course-review .course-reviews-list-shortcode li .review-text {
-  width: 100%;
-  padding-right: 120px;
-}
-@media (max-width: 600px) {
-  .learnpress-course-review .course-reviews-list li .review-text, .learnpress-course-review .course-reviews-list-shortcode li .review-text {
-    padding-right: 0;
-    padding-top: 15px;
-  }
-}
 .learnpress-course-review .course-reviews-list li .user-name, .learnpress-course-review .course-reviews-list-shortcode li .user-name {
   margin: 5px 0;
 }

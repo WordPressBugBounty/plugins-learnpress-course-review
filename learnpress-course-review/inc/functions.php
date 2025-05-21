@@ -12,6 +12,7 @@
 // Prevent loading this file directly
 use LearnPress\CourseReview\CourseReviewCache;
 use LearnPress\CourseReview\TemplateHooks\CourseRatingTemplate;
+use LearnPress\CourseReview\TemplateHooks\TemplateHooks;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -220,4 +221,14 @@ function learn_press_add_course_review( $args = array() ) {
  */
 function learn_press_course_review_template( $name, $args = null ) {
 	learn_press_get_template( $name, $args, learn_press_template_path() . '/addons/course-review/', LP_ADDON_COURSE_REVIEW_TMPL );
+}
+
+/**
+ * @return void
+ * @deprecated 4.1.6
+ * Remove on some themes before set _deprecated_function
+ */
+function learn_press_course_meta_primary_review() {
+	//_deprecated_function( __FUNCTION__, '4.1.6', 'TemplateHooks::instance()->meta_single_course_classic_layout()' );
+	TemplateHooks::instance()->meta_single_course_classic_layout();
 }

@@ -357,7 +357,7 @@ class CourseRatingTemplate {
 	 *
 	 * @return string
 	 * @since 4.1.6
-	 * @version 1.0.0
+	 * @version 1.0.1
 	 */
 	public function html_list_reviews( CourseModel $courseModel, $userModel, $settings ): string {
 		$html = '';
@@ -374,40 +374,74 @@ class CourseRatingTemplate {
 
 			foreach ( $reviews as $review ) {
 				$date_time_review = new LP_DateTime( $review->comment_date_gmt );
-				$html_items      .= sprintf(
-					'<li>
-						<div class="review-author">%s</div>
-						<div class="review-author-info">
-							<h4 class="user-name">%s</h4>
-							<div class="review-date">%s</div>
-							%s
-							<p class="review-title">%s</p>
-						</div>
-						<div class="review-text">
-							<div class="review-content">%s</div>
-						</div>
-					</li>',
-					get_avatar( $review->user_email ?? '' ),
-					$review->display_name ?? '',
-					$date_time_review->format( LP_DateTime::I18N_FORMAT ),
-					self::instance()->html_rated_star( $review->rate ?? 0 ),
-					$review->title ?? '',
-					$review->content ?? ''
+
+				$section_info = apply_filters(
+					'learn-press/course-review/list-reviews/item-info/section',
+					[
+						'wrapper'     => '<div class="review-info">',
+						'user-name'   => sprintf(
+							'<h4 class="user-name">%s</h4>',
+							$review->display_name ?? ''
+						),
+						'date'        => sprintf(
+							'<div class="review-date">%s</div>',
+							$date_time_review->format( LP_DateTime::I18N_FORMAT )
+						),
+						'rated'       => self::instance()->html_rated_star( $review->rate ?? 0 ),
+						'title'       => sprintf(
+							'<div class="review-title">%s</div>',
+							$review->title ?? ''
+						),
+						'content'     => sprintf(
+							'<div class="review-content">%s</div>',
+							$review->content ?? ''
+						),
+						'wrapper_end' => '</div>',
+					],
+					$review,
+					$courseModel,
+					$userModel,
+					$settings
+				);
+
+				$section_item = [
+					'li'     => '<li>',
+					'avatar' => sprintf(
+						'<div class="review-author">%s</div>',
+						get_avatar( $review->user_email ?? '' )
+					),
+					'info'   => Template::combine_components( $section_info ),
+					'li_end' => '</li>',
+				];
+
+				$html_items .= apply_filters(
+					'learn-press/course-review/list-reviews/item/section',
+					Template::combine_components( $section_item ),
+					$review,
+					$courseModel,
+					$userModel,
+					$settings
 				);
 			}
 
-			$section = array(
-				'wrapper'       => '<div class="course-reviews">',
-				'ul'            => '<ul class="course-reviews-list">',
-				'reviews'       => $html_items,
-				'ul_end'        => '</ul>',
-				'btn_load_more' => $total_pages > 1 ? sprintf(
-					'<button class="lp-button course-review-load-more"
+			$section = apply_filters(
+				'learn-press/course-review/list-reviews/section',
+				array(
+					'wrapper'       => '<div class="course-reviews">',
+					'ul'            => '<ul class="course-reviews-list">',
+					'reviews'       => $html_items,
+					'ul_end'        => '</ul>',
+					'btn_load_more' => $total_pages > 1 ? sprintf(
+						'<button class="lp-button course-review-load-more"
 						id="course-review-load-more">%s
 					</button>',
-					esc_html__( 'Load more', 'learnpress-course-review' )
-				) : '',
-				'wrapper_end'   => '</div>',
+						esc_html__( 'Load more', 'learnpress-course-review' )
+					) : '',
+					'wrapper_end'   => '</div>',
+				),
+				$courseModel,
+				$userModel,
+				$settings
 			);
 
 			$html = Template::combine_components( $section );
