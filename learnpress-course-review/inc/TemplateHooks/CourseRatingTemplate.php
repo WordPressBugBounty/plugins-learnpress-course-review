@@ -378,25 +378,29 @@ class CourseRatingTemplate {
 				$section_info = apply_filters(
 					'learn-press/course-review/list-reviews/item-info/section',
 					[
-						'wrapper'     => '<div class="review-info">',
-						'user-name'   => sprintf(
+						'wrapper'                  => '<div class="review-content-right">',
+						'wrapper-info'             => '<div class="review-info">',
+						'wrapper-author-rated'     => '<div class="author-rated">',
+						'rated'                    => self::instance()->html_rated_star( $review->rate ?? 0 ),
+						'user-name'                => sprintf(
 							'<h4 class="user-name">%s</h4>',
 							$review->display_name ?? ''
 						),
-						'date'        => sprintf(
+						'wrapper-author-rated_end' => '</div>',
+						'date'                     => sprintf(
 							'<div class="review-date">%s</div>',
 							$date_time_review->format( LP_DateTime::I18N_FORMAT )
 						),
-						'rated'       => self::instance()->html_rated_star( $review->rate ?? 0 ),
-						'title'       => sprintf(
-							'<div class="review-title">%s</div>',
+						'wrapper-info_end'         => '</div>',
+						'title'                    => sprintf(
+							'<h5 class="course-review-title">%s</h5>',
 							$review->title ?? ''
 						),
-						'content'     => sprintf(
+						'content'                  => sprintf(
 							'<div class="review-content">%s</div>',
 							$review->content ?? ''
 						),
-						'wrapper_end' => '</div>',
+						'wrapper_end'              => '</div>',
 					],
 					$review,
 					$courseModel,

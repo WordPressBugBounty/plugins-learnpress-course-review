@@ -232,6 +232,11 @@ class TemplateHooks {
 			return $cmt_text;
 		}
 
+		$courseModel = CourseModel::find( $comment->comment_post_ID, true );
+		if ( ! $courseModel instanceof CourseModel ) {
+			return $cmt_text;
+		}
+
 		$rated = get_comment_meta( $comment->comment_ID, '_lpr_rating', true );
 
 		$html_rated_start = CourseRatingTemplate::instance()->html_rated_star( $rated );

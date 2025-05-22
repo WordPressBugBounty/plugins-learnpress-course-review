@@ -3,7 +3,7 @@ Contributors: thimpress
 Donate link:
 Tags: lms, education, e-learning, learning management system, review.
 Tested up to: 6.8
-Stable tag: 4.1.7
+Stable tag: 4.1.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,10 @@ Check out <a href="http://docs.thimpress.com/learnpress" target="_blank">LearnPr
 1. LearnPress Course Review screenshot.
 
 == Changelog ==
+
+= 4.1.8 (2025-05-22) =
+~ Fixed: conflict with review of WooCommerce.
+~ Tweak: style.
 
 = 4.1.7 (2025-05-21) =
 ~ Fixed: error some theme use 'learn_press_course_meta_primary_review' function deprecated.

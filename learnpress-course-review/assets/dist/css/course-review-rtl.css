@@ -302,14 +302,32 @@
   width: 100%;
   height: auto;
 }
-.learnpress-course-review .course-reviews-list li .user-name, .learnpress-course-review .course-reviews-list-shortcode li .user-name {
-  margin: 5px 0;
+.learnpress-course-review .course-reviews-list li .review-content-right, .learnpress-course-review .course-reviews-list-shortcode li .review-content-right {
+  flex: 1;
 }
-.learnpress-course-review .course-reviews-list li .review-title, .learnpress-course-review .course-reviews-list-shortcode li .review-title {
-  clear: both;
-  font-style: italic;
-  font-weight: 700;
-  margin: 5px 0;
+.learnpress-course-review .course-reviews-list li .user-name, .learnpress-course-review .course-reviews-list-shortcode li .user-name {
+  margin: 0;
+}
+.learnpress-course-review .course-reviews-list li .review-info, .learnpress-course-review .course-reviews-list-shortcode li .review-info {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.learnpress-course-review .course-reviews-list li .review-stars-rated, .learnpress-course-review .course-reviews-list-shortcode li .review-stars-rated {
+  margin-bottom: 0;
+}
+.learnpress-course-review .course-reviews-list li .author-rated, .learnpress-course-review .course-reviews-list-shortcode li .author-rated {
+  flex: 1;
+}
+.learnpress-course-review .course-reviews-list li .course-review-title, .learnpress-course-review .course-reviews-list-shortcode li .course-review-title {
+  margin: 0 0 8px 0;
+}
+@media (max-width: 480px) {
+  .learnpress-course-review .course-reviews-list li, .learnpress-course-review .course-reviews-list-shortcode li {
+    flex-direction: column;
+    gap: 12px;
+  }
 }
 
 .lp-field-star .lp-course-filter__field div.lp-filter-item-star {

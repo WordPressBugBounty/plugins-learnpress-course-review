@@ -160,6 +160,16 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 						return;
 					}
 
+					$post_id = $wp_comment_query->query_vars['post_id'];
+					if ( ! $post_id ) {
+						return;
+					}
+
+					$courseModel = CourseModel::find( $post_id, true );
+					if ( ! $courseModel instanceof CourseModel ) {
+						return;
+					}
+
 					$wp_comment_query->query_vars['type__not_in'] = self::$comment_type;
 				}
 			);
