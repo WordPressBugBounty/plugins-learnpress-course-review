@@ -357,7 +357,7 @@ class CourseRatingTemplate {
 	 *
 	 * @return string
 	 * @since 4.1.6
-	 * @version 1.0.1
+	 * @version 1.0.2
 	 */
 	public function html_list_reviews( CourseModel $courseModel, $userModel, $settings ): string {
 		$html = '';
@@ -394,11 +394,11 @@ class CourseRatingTemplate {
 						'wrapper-info_end'         => '</div>',
 						'title'                    => sprintf(
 							'<h5 class="course-review-title">%s</h5>',
-							$review->title ?? ''
+							wp_kses_post( $review->title ?? '' )
 						),
 						'content'                  => sprintf(
 							'<div class="review-content">%s</div>',
-							$review->content ?? ''
+							wp_kses_post( $review->content ?? '' )
 						),
 						'wrapper_end'              => '</div>',
 					],
@@ -437,8 +437,8 @@ class CourseRatingTemplate {
 					'ul_end'        => '</ul>',
 					'btn_load_more' => $total_pages > 1 ? sprintf(
 						'<button class="lp-button course-review-load-more"
-						id="course-review-load-more">%s
-					</button>',
+							id="course-review-load-more">%s
+						</button>',
 						esc_html__( 'Load more', 'learnpress-course-review' )
 					) : '',
 					'wrapper_end'   => '</div>',
@@ -464,7 +464,7 @@ class CourseRatingTemplate {
 	 *
 	 * @return string
 	 * @since 4.1.6
-	 * @version 1.0.0
+	 * @version 1.0.1
 	 */
 	public function html_unapprove( CourseModel $courseModel, $userModel ): string {
 		$html = '';
@@ -474,14 +474,16 @@ class CourseRatingTemplate {
 				return $html;
 			}
 
+			// Get comments of user for course with comment_approved = 0
 			$args           = array(
 				'user_id' => $userModel->get_id(),
-				'post_id' => $courseModel->get_id(),
+				'post_ID' => $courseModel->get_id(),
 				'type'    => 'review',
+				'status'  => 'hold',
 			);
 			$comments_count = get_comments( $args );
 
-			if ( ! empty( $comments_count ) && ! $comments_count[0]->comment_approved ) {
+			if ( ! empty( $comments_count ) ) {
 				$html = sprintf(
 					'<div class="learn-press-message success">%s</div>',
 					__( 'Your review has been submitted and is awaiting approve.', 'learnpress-course-review' )

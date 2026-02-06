@@ -3,6 +3,9 @@
  * Template for displaying form submit review.
  */
 
+_deprecated_file( __FILE__, '4.2.0' );
+return;
+
 if ( ! isset( $user ) || ! isset( $course_id ) ) {
 	return;
 }

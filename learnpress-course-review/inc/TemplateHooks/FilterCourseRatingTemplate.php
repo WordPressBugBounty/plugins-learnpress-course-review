@@ -64,7 +64,7 @@ class FilterCourseRatingTemplate {
 			if ( 'level' === $key ) {
 				$fields['course_review'] = [
 					'id'    => 'course_review',
-					'label' => esc_html__( 'Course Reviews', 'learnpress' ),
+					'label' => esc_html__( 'Course Reviews', 'learnpress-course-review' ),
 				];
 			}
 		}

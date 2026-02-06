@@ -84,7 +84,7 @@ class CourseReviewCache extends LP_Cache {
 		$courseModel = CourseModel::find( $course_id, true );
 		if ( $courseModel instanceof CourseModel ) {
 			$courseModel->meta_data->{LP_Addon_Course_Review::META_KEY_RATING_AVERAGE} = $rating['rated'];
-			$courseModel->save();
+			$courseModel->save( true );
 		}
 		$key_cache_review = "user/{$user_id}/course/{$course_id}/review";
 		$this->clear( $key_cache_review );

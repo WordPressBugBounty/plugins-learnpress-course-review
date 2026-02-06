@@ -7,7 +7,11 @@
  * @author ThimPress
  * @package LearnPress/Course-Review/Templates
  * version  3.0.2
+ * @deprecated 4.2.0
  */
+
+_deprecated_file( __FILE__, '4.2.0' );
+return;
 
 // Prevent loading this file directly
 defined( 'ABSPATH' ) || exit;

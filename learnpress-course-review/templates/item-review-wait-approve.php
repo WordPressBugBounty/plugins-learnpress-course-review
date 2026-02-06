@@ -7,6 +7,9 @@
  * @version  4.0.2
  */
 
+_deprecated_file( __FILE__, '4.2.0' );
+return;
+
 if ( ! isset( $course_id ) ) {
 	return;
 }

@@ -65,8 +65,8 @@ class TemplateHooks {
 				function () {
 					add_submenu_page(
 						'learn_press',
-						__( 'Course Reviews', 'learnpress' ),
-						__( 'Course Reviews', 'learn' ),
+						__( 'Course Reviews', 'learnpress-course-review' ),
+						__( 'Course Reviews', 'learnpress-course-review' ),
 						'manage_options',
 						home_url( '/wp-admin/edit-comments.php?comment_type=review' )
 					);
@@ -268,7 +268,7 @@ class TemplateHooks {
 
 		add_meta_box(
 			'lp_course_rating',
-			esc_html__( 'Course Rating', 'learnpress' ),
+			esc_html__( 'Course Rating', 'learnpress-course-review' ),
 			function () use ( $comment ) {
 				$review_rated = get_comment_meta( $comment->comment_ID, '_lpr_rating', true );
 				$review_title = get_comment_meta( $comment->comment_ID, '_lpr_review_title', true );

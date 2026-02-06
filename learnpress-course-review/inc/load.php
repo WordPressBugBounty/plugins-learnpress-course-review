@@ -126,7 +126,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 				function ( $fields, $post_id ) {
 					$fields[ self::META_KEY_ENABLE ] = new LP_Meta_Box_Checkbox_Field(
 						esc_html__( 'Enable reviews', 'learnpress-course-review' ),
-						esc_html__( 'Show reviews for this course' ),
+						esc_html__( 'Show reviews for this course', 'learnpress-course-review' ),
 						'yes'
 					);
 
@@ -144,6 +144,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 				'learn-press/widgets/register',
 				function ( $widgets ) {
 					$widgets[] = CourseReviewWidget::instance();
+
 					return $widgets;
 				}
 			);
@@ -383,7 +384,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 
 				$rating['total'] = (int) $rating_rs->total;
 				$total_rating    = 0;
-				for ( $star = 1; $star <= 5; $star++ ) {
+				for ( $star = 1; $star <= 5; $star ++ ) {
 					$key = '';
 					switch ( $star ) {
 						case 1:
@@ -469,9 +470,21 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 			update_post_meta( $course_id, LP_Addon_Course_Review::META_KEY_RATING_AVERAGE, $average );
 		}
 
+		/**
+		 * Get SVG star.
+		 *
+		 * @return string
+		 * @since 4.1.2
+		 * @version 1.0.1
+		 */
 		public static function get_svg_star() {
-			//return wp_remote_fopen( LP_Addon_Course_Review_Preload::$addon->get_plugin_url( 'assets/images/svg-star.svg' ) );
-			return file_get_contents( LP_ADDON_COURSE_REVIEW_PATH . '/assets/images/svg-star.svg' );
+			$path_default = LP_ADDON_COURSE_REVIEW_PATH . '/assets/images/svg-star.svg';
+			$path         = realpath( apply_filters( 'learn-press/course-review/svg-star', $path_default ) );
+			if ( ! $path ) {
+				$path = $path_default;
+			}
+
+			return file_get_contents( $path );
 		}
 
 		/**

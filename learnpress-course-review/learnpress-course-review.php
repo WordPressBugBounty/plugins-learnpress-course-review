@@ -1,17 +1,17 @@
 <?php
 /**
  * Plugin Name: LearnPress - Course Review
- * Plugin URI: http://thimpress.com/learnpress
+ * Plugin URI: https://thimpress.com/product/learnpress-course-review/
  * Description: Adding review for course.
  * Author: ThimPress
- * Version: 4.1.8
+ * Version: 4.2.0
  * Author URI: http://thimpress.com
  * Tags: learnpress
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Text Domain: learnpress-course-review
  * Domain Path: /languages/
- * Require_LP_Version: 4.2.8
+ * Require_LP_Version: 4.3.2.3
  * Requires Plugins: learnpress
  *
  * @package learnpress-course-review

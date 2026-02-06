@@ -9,6 +9,8 @@
  * version  3.0.9
  */
 
+// Todo: Theme Eduma v5.8.2, Coaching 3.9.0, Course Builder, Ivy School, Education Pack, Elearning  are using.
+
 // Prevent loading this file directly
 defined( 'ABSPATH' ) || exit;
 
