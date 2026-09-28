@@ -4,14 +4,14 @@
  * Plugin URI: https://thimpress.com/product/learnpress-course-review/
  * Description: Adding review for course.
  * Author: ThimPress
- * Version: 4.2.0
+ * Version: 4.2.1
  * Author URI: http://thimpress.com
  * Tags: learnpress
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Text Domain: learnpress-course-review
  * Domain Path: /languages/
- * Require_LP_Version: 4.3.2.3
+ * Require_LP_Version: 4.4.9
  * Requires Plugins: learnpress
  *
  * @package learnpress-course-review
@@ -25,6 +25,7 @@ use LearnPress\CourseReview\TemplateHooks\TemplateHooks;
 defined( 'ABSPATH' ) || exit;
 
 const LP_ADDON_COURSE_REVIEW_FILE = __FILE__;
+const LP_ADDON_COURSE_REVIEW_PATH = __DIR__;
 
 /**
  * Class LP_Addon_Course_Review_Preload
@@ -78,14 +79,16 @@ class LP_Addon_Course_Review_Preload {
 		if ( ! is_plugin_active( 'learnpress/learnpress.php' ) ) {
 			add_action( 'admin_notices', array( $this, 'show_note_errors_require_lp' ) );
 
-			deactivate_plugins( LP_ADDON_COURSE_REVIEW_BASENAME );
+			/*deactivate_plugins( LP_ADDON_COURSE_REVIEW_BASENAME );
 
 			if ( isset( $_GET['activate'] ) ) {
 				unset( $_GET['activate'] );
-			}
+			}*/
 
 			return;
 		}
+
+		include_once LP_ADDON_COURSE_REVIEW_PATH . '/vendor/autoload.php';
 
 		// Sure LP loaded.
 		add_action( 'learn-press/ready', array( $this, 'load' ) );
@@ -95,8 +98,7 @@ class LP_Addon_Course_Review_Preload {
 	 * Load addon
 	 */
 	public function load() {
-		include_once 'vendor/autoload.php';
-		include_once 'inc/load.php';
+		include_once LP_ADDON_COURSE_REVIEW_PATH . '/inc/load.php';
 		self::$addon = LP_Addon_Course_Review::instance();
 		//LP_Addon_Review_List_Rating_Reviews_Template::instance();
 		FilterCourseRatingTemplate::instance();

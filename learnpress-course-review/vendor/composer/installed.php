@@ -1,22 +1,22 @@
 <?php return array(
     'root' => array(
+        'name' => 'learnpress/learnpress-course-review',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
+        'reference' => '8e37120f4a762e72a05dd32c9b11b7aba7f6f1a6',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'b4371cbe83dc84f4dd47d250e14d287afd4151a1',
-        'name' => 'learnpress/learnpress-course-review',
         'dev' => false,
     ),
     'versions' => array(
         'learnpress/learnpress-course-review' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
+            'reference' => '8e37120f4a762e72a05dd32c9b11b7aba7f6f1a6',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'b4371cbe83dc84f4dd47d250e14d287afd4151a1',
             'dev_requirement' => false,
         ),
     ),

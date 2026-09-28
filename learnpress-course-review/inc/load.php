@@ -64,7 +64,6 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 		 * @since 3.0.0
 		 */
 		protected function _define_constants() {
-			define( 'LP_ADDON_COURSE_REVIEW_PATH', dirname( LP_ADDON_COURSE_REVIEW_FILE ) );
 			define( 'LP_ADDON_COURSE_REVIEW_PER_PAGE', apply_filters( 'learn-press/course-review/per-page', 5 ) );
 			define( 'LP_ADDON_COURSE_REVIEW_TMPL', LP_ADDON_COURSE_REVIEW_PATH . '/templates/' );
 			define( 'LP_ADDON_COURSE_REVIEW_URL', untrailingslashit( plugins_url( '/', __DIR__ ) ) );
@@ -373,7 +372,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 			try {
 				$rating_cache = $courseReviewCache->get_rating( $course_id );
 				if ( false !== $rating_cache ) {
-					return json_decode( $rating_cache, true );
+					return $rating_cache;
 				}
 
 				$courseReviewsDB = CourseReviewsDB::getInstance();
@@ -422,7 +421,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 				$rating['rated'] = $rating_average;
 
 				// Set cache
-				$courseReviewCache->set_rating( $course_id, json_encode( $rating ) );
+				$courseReviewCache->set_rating( $course_id, $rating );
 			} catch ( Throwable $e ) {
 				if ( ! empty( $e->getMessage() ) ) {
 					LP_Debug::error_log( $e );
@@ -616,7 +615,7 @@ if ( ! class_exists( 'LP_Addon_Course_Review' ) ) {
 				);
 
 				if ( ! $add_review instanceof WP_Error ) {
-					$flag = true;
+					$flag = $add_review;
 				} else {
 					throw new Exception( $add_review->get_error_message() );
 				}
